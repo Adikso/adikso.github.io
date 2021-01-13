@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Time Game</title>
+
+    <style>
+        html {
+            height: 100%;
+            color: #fff;
+            font-family: sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            height: 100%;
+            background: #0b060d;
+            overflow: hidden;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #game {
+            box-shadow: 0 0 70px #000;
+            /*filter: drop-shadow(0 0 30px #040205);*/
+        }
+
+        .controls {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .key {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 20px;
+            width: 31px;
+            height: 36px;
+            background: url(keys.png);
+            margin-right: 8px;
+            margin-left: 20px;
+        }
+
+        .key-w {
+            background-position-x: 160px;
+        }
+
+        .key-a {
+            background-position-x: 129px;
+        }
+
+        .key-d {
+            background-position-x: 98px;
+        }
+
+        .key-space {
+            width: 67px;
+            background-position-x: 67px;
+        }
+
+        #pre-render {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <!--<h1>Cactujam</h1>-->
+    <canvas id="game" width="1024" height="768"></canvas>
+    <div class="controls">
+        <div class="key key-w"></div> Przyśpieszenie
+        <div class="key key-a"></div> Obrót w lewo
+        <div class="key key-d"></div> Obrót w prawo
+        <!--<div class="key key-space"></div> Strzał z lasera-->
+    </div>
+    <canvas id="pre-render" width="200" height="200"></canvas>
+</div>
+<script src="stages/splash.js"></script>
+<script src="stages/game.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
