@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pawn Revenge</title>
+    <script src="webfont.js"></script>
+    <script>
+        WebFont.load({
+            custom: {
+                families: ['Kenney']
+            }
+        });
+
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
+    </script>
+    <style type="text/css">
+        @font-face {
+            font-family:"Kenney";
+            src:url("assets/Kenney High Square.ttf") format("woff");
+        }
+
+        @font-face {
+            font-family:"KenneyFuture";
+            src:url("assets/Kenney Future.ttf") format("woff");
+        }
+    </style>
+    <script src="intersects.min.js"></script>
+    <script src="pixi.min.js"></script>
+    <script src="pixi-filters.js"></script>
+    <script src="ease.js"></script>
+</head>
+<body>
+    <script type="module" src="src/game.js"></script>
+
+    <style>
+        div {
+            font-family: KenneyFuture,serif;
+            color: #fff;
+            font-size: 20px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        body {
+            margin: 0;
+            width: 100%;
+            background: linear-gradient(
+                    rgba(0, 0, 0, 0.7),
+                    rgba(0, 0, 0, 0.7)
+            ), url("assets/wall.png");
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Kenney sans-serif;
+            flex-direction: column-reverse;
+        }
+
+        button {
+            background: #666666;
+            border: 1px solid #353535;
+            padding: 10px;
+            border-radius: 10px;
+        }
+    </style>
+    <div>
+        WSAD - Movement<br/>
+        LMB - Strong, long-range attack<br/>
+        RMB - Weak, short-range attack<br/><br/>
+        <button id="musicToggle">Toggle music</button>
+    </div>
+
+    <script>
+        const music = new Audio('assets/music.wav');
+        music.loop = true;
+        music.volume = 0.1;
+        music.play();
+
+        document.getElementById('musicToggle').addEventListener('click', () => {
+            if (music.paused) {
+                music.play();
+            }
+            else {
+                music.pause();
+            }
+        })
+    </script>
+</body>
+</html>
