@@ -1251,7 +1251,7 @@ ct.rooms.templates['game'] = {
     onStep() {
         /* room game — core_OnStep (On frame start event) */
 {
-if (ct.camera.x - this.lastScreenX > 1280) {
+if (ct.camera.x - this.lastScreenX > 1280 && !ct.room.won) {
     ct.templates.copy('lampa', ct.camera.x + 1280 + 300, 120);
     const bottom = ct.templates.copy('lampa', ct.camera.x + 1280 + 300, 640);
     bottom.depth = 5;
@@ -1328,7 +1328,7 @@ if (now > 60 && !this.won) {
     return;
 }
 
-if (distance <= 0 && now > 0) {
+if (distance >= 150 && now < 60) {
     this.won = true;
     ct.room.won = true;
 }
