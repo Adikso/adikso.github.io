@@ -834,10 +834,10 @@ class Room extends PIXI.Container {
             if (this === ct.room) {
                 ct.pixiApp.renderer.backgroundColor = ct.u.hexToPixi(this.template.backgroundColor);
             }
-            ct.fittoscreen();
-if (this === ct.room) {
+            if (this === ct.room) {
     ct.place.tileGrid = {};
 }
+ct.fittoscreen();
 if (this === ct.room) {
     ct.light.clear();
     ct.light.ambientColor = ct.u.hexToPixi(ct.room.lightAmbientColor || '#FFFFFF');
@@ -1187,7 +1187,8 @@ ct.rooms.beforeDraw = function beforeDraw() {
     
 };
 ct.rooms.afterDraw = function afterDraw() {
-    if (ct.sound.follow && !ct.sound.follow.kill) {
+    ct.keyboard.clear();
+if (ct.sound.follow && !ct.sound.follow.kill) {
     ct.sound.howler.pos(
         ct.sound.follow.x,
         ct.sound.follow.y,
@@ -1196,7 +1197,6 @@ ct.rooms.afterDraw = function afterDraw() {
 } else if (ct.sound.manageListenerPosition) {
     ct.sound.howler.pos(ct.camera.x, ct.camera.y, ct.camera.z || 0);
 }
-ct.keyboard.clear();
 for (const pointer of ct.pointer.down) {
     pointer.xprev = pointer.x;
     pointer.yprev = pointer.y;
@@ -1322,8 +1322,9 @@ ct.rooms.templates['ui'] = {
 const now = Math.floor((Date.now() - this.start) / 1000);
 const distance = Math.floor(ct.camera.x / 300)
 
-if (now < 0 && !this.won) {
+if (now > 60 && !this.won) {
     this.textLabel.text = `Przypał, koniecz czasu. Naciśnij Enter, żeby zrestartować`
+    ct.room.end = true;
     return;
 }
 
