@@ -1,0 +1,103 @@
+<html>
+	<body>
+		<canvas id="gameCanvas" width="640" height="480" />
+		<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let carX = 50;
+let carY = 50;
+let carSpeed = 15;
+
+let clockX = 200;
+let clockY = 50;
+let clockSpeed = 5;
+let clockSpawnTimer = 0;
+
+let time = 60;
+let gameOver = false;
+
+// handle keyboard input
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowLeft') {
+    carX -= carSpeed;
+  } else if (event.key === 'ArrowRight') {
+    carX += carSpeed;
+  } else if (event.key === 'ArrowUp') {
+    carY -= carSpeed;
+  } else if (event.key === 'ArrowDown') {
+    carY += carSpeed;
+  }
+});
+
+function update() {
+  // update clock position
+  clockX -= clockSpeed;
+  if (clockX < 0) {
+    clockX = canvas.width;
+    clockY = Math.random() * canvas.height;
+  }
+
+  // update clock spawn timer
+  clockSpawnTimer++;
+  if (clockSpawnTimer >= 280) {
+    clockX = canvas.width;
+    clockY = Math.random() * canvas.height;
+    clockSpawnTimer = 0;
+  }
+
+  // check for collisions
+  if (carX + 50 > clockX && carX < clockX + 50 && carY + 50 > clockY && carY < clockY + 50) {
+    time += 10;
+    clockX = canvas.width;
+    clockY = Math.random() * canvas.height;
+  }
+
+  // check for game over
+  if (time <= 0) {
+    gameOver = true;
+  }
+}
+
+function draw() {
+  // clear canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // draw car
+  ctx.fillStyle = 'red';
+  ctx.fillRect(carX, carY, 50, 50);
+
+  // draw clock
+  ctx.fillStyle = 'blue';
+  ctx.beginPath();
+  ctx.arc(clockX, clockY, 25, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // draw time
+  ctx.font = '24px sans-serif';
+  ctx.fillStyle = 'black';
+  ctx.textAlign = 'right';
+  ctx.fillText(time, canvas.width - 10, 30);
+
+  // draw game over message
+  if (gameOver) {
+    ctx.font = '48px sans-serif';
+    ctx.fillStyle = 'black';
+    ctx.textAlign = 'center';
+    ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2);
+  }
+}
+
+function loop() {
+  update();
+  draw();
+  if (!gameOver) {
+    requestAnimationFrame(loop);
+  }
+}
+
+// start the game loop
+loop();
+</script>
+	</body>
+</html>
