@@ -2305,6 +2305,7 @@ ct.templates.templates["image-2019-02-19_000907"] = {
         /* template image-2019-02-19_000907 — core_OnStep (On frame start event) */
 {
 if (ct.room.end) {
+    ct.camera.follow = undefined;
     ct.camera.targetX += 10;
     return;
 }
