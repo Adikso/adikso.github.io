@@ -1,0 +1,240 @@
+:root {
+    --background-color: #141618;
+    --background-color-lighter: #181a1c;
+    --text-color: #D1D1D1;
+    --primary-color: #4db9fd;
+    --border-color: #0f1011;
+    --border-color-light: #444;
+}
+
+body {
+    background: var(--background-color) url("/img/bg.png") repeat-x;
+
+    max-width: 1000px;
+    padding: 20px;
+    margin: 0 auto;
+
+    line-height: 26px;
+    font-size: 1.1em;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text-color);
+}
+
+a {
+    color: var(--primary-color);
+}
+
+img {
+    max-width: 100%;
+    border: 5px solid var(--border-color);
+}
+
+.nav-menu {
+    display: flex;
+    flex-direction: row;
+
+    padding-left: 0;
+    margin-bottom: 50px;
+    align-items: center;
+
+    text-transform: uppercase;
+
+    li {
+        list-style-type: none;
+        padding-right: 10px;
+        float: left;
+        font-weight: bold;
+    }
+
+    a {
+        font-weight: bold;
+        text-decoration: none;
+        color: rgb(209, 209, 209);
+
+        padding: 10px;
+        transition: background 0.3s;
+    }
+
+    a:hover {
+        background: var(--background-color-lighter);
+    }
+}
+
+h1, h2, h3, h4 {
+    margin-top: 50px;
+    padding-right: 10px;
+}
+
+h1 {
+    display: inline-block;
+}
+
+h2 {
+    border-left: 10px solid var(--primary-color);
+    padding-left: 15px;
+}
+
+h3:before {
+    content: '';
+    background: var(--primary-color);
+
+    display: inline-block;
+    margin-right: 10px;
+    width: 10px;
+    height: 10px;
+}
+
+h4 {
+    display: inline-block;
+    margin-bottom: 0;
+}
+
+.post-header {
+    border-left: 10px solid var(--primary-color);
+    padding-left: 15px;
+
+    h1[class='post-title'] {
+        margin-top: 0;
+        margin-bottom: 0;
+        line-height: 1.1em;
+        padding: 0;
+    }
+}
+
+.posts-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    gap: 20px;
+    display: flex;
+    flex-direction: column;
+
+    a {
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    h2 {
+        margin: 0;
+        color: var(--text-color);
+    }
+
+    .authored {
+        margin-top: 10px;
+    }
+}
+
+.authored {
+    font-size: 0.9em;
+    display: flex;
+    margin-top: 5px;
+}
+
+.authored span, p.authored {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.sidebar {
+    padding: 10px;
+    border: 5px dashed var(--border-color-light);
+    display: block;
+}
+
+.sidebar-toc {
+    padding: 10px;
+    display: block;
+    border: 2px solid var(--border-color);
+    background: var(--background-color);
+}
+
+@media screen and (min-width: 1765px) {
+    .sidebar-right {
+        position: absolute;
+        right: -360px;
+        width: 300px;
+    }
+
+    .sidebar-left {
+        position: absolute;
+        left: -360px;
+        width: 300px;
+    }
+}
+
+.sidebar-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.sidebar-title:empty {
+    display: none;
+}
+
+.content {
+    position: relative;
+    margin-top: 40px;
+}
+
+.avatar {
+    width: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+.logo {
+    width: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+.nav-me-anchor {
+    opacity: 0;
+    transition: opacity 0.3s;
+    text-decoration: none;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table, tr {
+    border: 2px solid var(--border-color)
+}
+
+td, th:not(:empty) {
+    border-right: 2px solid var(--border-color);
+    background: var(--background-color-lighter);
+    padding: 5px;
+}
+
+th:empty {
+    display: none;
+}
+
+@media screen and (max-width: 1765px) {
+    .hide-mobile {
+        display: none;
+    }
+}
+
+blockquote {
+    border-left: solid #fd874d 5px;
+    margin-left: 0;
+    padding-left: 10px;
+    background: #fd874d14;
+    font-style: italic;
+}
+
+code[class] {
+    font-size: 0.8em;
+}
+
+code:not([class]) {
+    color: var(--primary-color);
+}
+

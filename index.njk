@@ -1,0 +1,17 @@
+---
+title: Posts
+---
+{% extends "layouts/base.njk" %}
+{% block body %}
+ <ul class="posts-list">
+    {%- for post in collections.post | reverse -%}
+    <li class="posts-list-entry">
+        <a href="{{ post.url }}">
+            <h2 class="post-title">{{ post.data.title }}</h2>
+        </a> 
+        <p class="authored">{{ post.date | simpleDate }}</span>
+         {{ post.templateContent | excerpt | safe }}
+    </li>
+    {%- endfor -%}
+</ul>
+{% endblock %}

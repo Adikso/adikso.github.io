@@ -1,0 +1,15 @@
+{% extends "layouts/base.njk" %}
+{% block body %}
+    <div class="post-header">
+        <h1 class="post-title">{{title}}</h1>
+
+        <div class="authored">
+            <span title="{{date}}">{{ date | simpleDate }}</span> by Adikso
+        </div>
+    </div>
+
+    <div class="content">
+        {{ content | toc | safe }}
+        {{ content | safe }}
+    </div>
+{% endblock %}

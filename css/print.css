@@ -1,0 +1,14 @@
+@media print {
+    .header {
+		display: none;
+	}
+
+    body {
+        background-color: #fff !important;
+        color: #000;
+    }
+
+    .author {
+        display: block;
+    }
+}
