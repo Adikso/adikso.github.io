@@ -24,6 +24,7 @@ module.exports = function(eleventyConfig) {
   });
 
   eleventyConfig.addPassthroughCopy("public.asc");
+  eleventyConfig.addPassthroughCopy(".nojekyll");
   eleventyConfig.addPassthroughCopy(".well-known/");
 
   const markdownItOptions = {
