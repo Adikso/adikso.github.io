@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xml:base="https://adikso.net/" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Adikso blog</title>
+    <link>https://adikso.net/</link>
+    <atom:link href="https://adikso.net/feed.xml" rel="self" type="application/rss+xml" />
+    <description>Writing mostly about my personal cybersecurity adventures.</description>
+    <language>en</language>
+    <item>
+      <title>Hacking Zamel ZMB-01 video surveillance system</title>
+      <link>https://adikso.net/posts/zamel-zmb-01/</link>
+      <description>
+<p>The analyzed hardware is the <a href="https://zamel.com/pl/gardi/zestaw-monitoringu-bezprzewodowego-wi-fi-typ-zmb-01">Zamel ZMB-01</a> video surveillance system, which allows connecting cameras via WIFI.
+It is possible to view the stream remotely from a smartphone, on the webpage, or it can be used as a standalone system with external monitor and mouse attached to the device.</p>
+</description>
+      <pubDate>Wed, 10 Jul 2024 00:00:00 +0000</pubDate>
+      <dc:creator>Adikso</dc:creator>
+      <guid>https://adikso.net/posts/zamel-zmb-01/</guid>
+    </item>
+  </channel>
+</rss>
