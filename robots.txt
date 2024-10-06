@@ -1,0 +1,4 @@
+Sitemap: https://adikso.net/sitemap.xml
+
+User-agent: *
+Disallow:
