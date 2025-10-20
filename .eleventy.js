@@ -12,7 +12,7 @@ module.exports = function(eleventyConfig) {
     alwaysWrapLineHighlights: false,
   });
   eleventyConfig.addPlugin(pluginTOC, {
-    wrapperClass: 'toc sidebar-toc sidebar-right'
+    wrapperClass: 'toc sidebar-toc'
   });
   eleventyConfig.addPlugin(pluginRss);
   
