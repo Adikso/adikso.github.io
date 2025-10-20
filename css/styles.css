@@ -7,6 +7,10 @@
     --border-color-light: #444;
 }
 
+html, body {
+    height: calc(100% - 20px);
+}
+
 body {
     background: var(--background-color) url("/img/bg.png") repeat-x;
 
