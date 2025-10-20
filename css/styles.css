@@ -24,6 +24,10 @@ body {
     color: var(--text-color);
 }
 
+.content {
+    padding-bottom: 20px;
+}
+
 a {
     color: var(--primary-color);
 }
