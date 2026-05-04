@@ -79,7 +79,7 @@ img {
     gap: 2px;
 
     padding-left: 0;
-    margin-bottom: 50px;
+    margin-bottom: 40px;
     align-items: center;
 
     text-transform: uppercase;
@@ -319,6 +319,32 @@ blockquote {
     padding: 12px 16px;
     background: var(--primary-color-subtle);
     font-style: italic;
+}
+
+.site-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 60px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    border-top: 1px solid var(--border-color-light);
+    font-size: 0.9em;
+    color: var(--text-muted);
+}
+
+.site-footer-links {
+    display: flex;
+    gap: 16px;
+    font-size: 1.1em;
+}
+
+.site-footer-links a {
+    color: var(--text-muted);
+}
+
+.site-footer-links a:hover {
+    color: var(--text-bright);
 }
 
 code[class] {

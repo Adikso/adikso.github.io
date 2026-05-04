@@ -19,6 +19,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("css");
   eleventyConfig.addFilter("excerpt", excerpt);
   eleventyConfig.addFilter("simpleDate", simpleDate);
+  eleventyConfig.addFilter("currentYear", () => new Date().getFullYear());
   eleventyConfig.addPairedShortcode("sidebar", function(content, position, title) { 
     return `<div class="sidebar sidebar-${position}"><div class="sidebar-title">${title || ''}</div>${content}</div>`
   });
